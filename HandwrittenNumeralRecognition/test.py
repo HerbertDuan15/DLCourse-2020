@@ -52,7 +52,7 @@ if torch.cuda.is_available():
 print(model)
 
 # 卷积神经网络模型进行模型训练和参数优化的代码
-model.load_state_dict(torch.load('cnn.pkl'))
+model.load_state_dict(torch.load('cnn1.pkl'))
 
 X_test,y_test = next(iter(data_loader_test))
 inputs = Variable(X_test)
