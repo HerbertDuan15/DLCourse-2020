@@ -1,12 +1,13 @@
+#1、导入包
 import torch
-import torch.nn as nn
+import torch.nn as nn # neural network神经网络包
 import torchvision.datasets as normal_datasets
 import torchvision.transforms as transforms
 from torch.autograd import Variable
  
-num_epochs = 5
-batch_size = 100
-learning_rate = 0.001
+num_epochs = 5 # 所有数据迭代训练的次数
+batch_size = 100 # 一批训练100个图片
+learning_rate = 0.001 #学习率
  
  
 # 将数据处理成Variable, 如果有GPU, 可以转成cuda形式
@@ -15,28 +16,19 @@ def get_variable(x):
     return x.cuda() if torch.cuda.is_available() else x
  
  
-# 从torchvision.datasets中加载一些常用数据集
+#2 从torchvision.datasets中加载测试数据集
 train_dataset = normal_datasets.MNIST(
     root='./data/',  # 数据集保存路径
     train=True,  # 是否作为训练集
     transform=transforms.ToTensor(),  # 数据如何处理, 可以自己自定义
     download=True)  # 路径下没有的话, 可以下载
- 
-# 见数据加载器和batch
-test_dataset = normal_datasets.MNIST(root='./data/',
-                                     train=False,
-                                     transform=transforms.ToTensor())
- 
+
 train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
                                            batch_size=batch_size,
                                            shuffle=True)
+
  
-test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
-                                          batch_size=batch_size,
-                                          shuffle=False)
- 
- 
-# 两层卷积
+#3、定义模型：两层卷积
 class CNN(nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
@@ -60,15 +52,14 @@ class CNN(nn.Module):
         out = self.fc(out)
         return out
  
- 
 cnn = CNN()
 if torch.cuda.is_available():
     cnn = cnn.cuda()
- 
-# 选择损失函数和优化方法
+
+#4、 选择损失函数和优化方法
 loss_func = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(cnn.parameters(), lr=learning_rate)
- 
+# 5、训练
 for epoch in range(num_epochs):
     for i, (images, labels) in enumerate(train_loader):
         images = get_variable(images)
@@ -79,11 +70,10 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
- 
+        # 可视化训练过程
         if (i + 1) % 100 == 0:
             print('Epoch [%d/%d], Iter [%d/%d] Loss: %.4f'
                   % (epoch + 1, num_epochs, i + 1, len(train_dataset) // batch_size, loss.item()))
  
- 
-# Save the Trained Model
+#6、保存训练模型 Save the Trained Model
 torch.save(cnn.state_dict(), 'cnn1.pkl')
