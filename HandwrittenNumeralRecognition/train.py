@@ -86,4 +86,4 @@ for epoch in range(num_epochs):
  
  
 # Save the Trained Model
-torch.save(cnn.state_dict(), 'cnn.pkl')
+torch.save(cnn.state_dict(), 'cnn1.pkl')

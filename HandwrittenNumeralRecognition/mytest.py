@@ -40,7 +40,7 @@ data_test = datasets.MNIST(root="./data/",
  
 #数据预览和数据装载
 # 下面对数据进行装载，我们可以将数据的载入理解为对图片的处理，
-# 在处理完成后，我们就需要将这些图片打包好送给我们的模型进行训练 了  而装载就是这个打包的过程
+# 在处理完成后，我们就需要将这些图片打包好送给我们的模型进行训练了，而装载就是这个打包的过程
 # dataset 参数用于指定我们载入的数据集名称
 # batch_size参数设置了每个包中的图片数据个数
 #  在装载的过程会将数据随机打乱顺序并进打包
@@ -108,7 +108,7 @@ for epoch in range(5):
  
  
 # Save the Trained Model
-torch.save(model.state_dict(), 'cnn.pkl')
+torch.save(model.state_dict(), 'mycnn.pkl')
 
 
 
