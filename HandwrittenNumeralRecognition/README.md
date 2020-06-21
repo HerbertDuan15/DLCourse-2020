@@ -1,9 +1,7 @@
 # Handwritten Numeral Recognition （手写数字识别）
 ## ./data 
 ------>MINIST data set
-## mytest.py
-------> learn for pytorch
-## web_train.py
-------> train and generate "cnn.pkl"
-## web_test.py
-------> load 'cnn.pkl' anb test
+## train.py
+------> train and generate "cnn1.pkl"
+## test.py
+------> load 'cnn1.pkl' anb test

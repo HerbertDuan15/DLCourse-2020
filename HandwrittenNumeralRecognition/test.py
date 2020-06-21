@@ -4,6 +4,7 @@ import torch.nn as nn
 import torchvision
 from torchvision import datasets
 from torchvision import transforms
+from torch.autograd import Variable
  
 #transform = transforms.Compose([transforms.ToTensor(),
                                 #transforms.Normalize(mean=[0.5],std=[0.5])])
@@ -41,19 +42,26 @@ class CNN(nn.Module):
         return out
 
 model = CNN()
-# 将所有的模型参数移动到GPU上
+#4、 加载训练好的模型参数
+# 将所有的模型参数移动到GPU上(如果有)
 if torch.cuda.is_available():
-    model.cuda()
+    model = model.cuda()
+    model.load_state_dict(torch.load('cnn1.pkl'))
+else:
+    model.load_state_dict(torch.load('cnn1.pkl',map_location='cpu'))       # 加载训练好的模型参数
 
 print(model)
 
-#4、 加载训练好的模型参数
-model.load_state_dict(torch.load('cnn1.pkl'))
 
+def get_variable(x):
+    x = Variable(x)
+    return x.cuda() if torch.cuda.is_available() else x
+ 
 # 5、在测试集上计算正确率
 count = 0
 right_count = 0
 for i, (images, labels) in enumerate(test_loader):
+    images,labels = get_variable(images), get_variable(labels)
     count += images.shape[0]
     outputs = model(images)
     predect_label =  torch.max(outputs, 1)[1].data.squeeze()
