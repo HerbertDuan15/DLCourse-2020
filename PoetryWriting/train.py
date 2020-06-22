@@ -7,7 +7,6 @@ from torch.autograd import Variable
 import numpy as np
 import tqdm
 from torchnet import meter
-from test import generate
  
  
 # 2 加载训练数据集
@@ -46,17 +45,43 @@ class PoetryModel(nn.Module):
             c_0 = input.data.new(3, batch_size, self.hidden_dim).fill_(0).float()
         else:
             h_0, c_0 = hidden
-        # size: (seq_len,batch_size,embeding_dim)
-        # 输入 序列长度 * batch(每个汉字是一个数字下标)
+
         embeds = self.embeddings(input)
-        # output size: (seq_len,batch_size,hidden_dim)
-        # 输出 序列长度 * batch * 向量维度
-        # 输出hidden的大小： 序列长度 * batch * hidden_dim
+
         output, hidden = self.lstm(embeds, (h_0, c_0))
 
-        # size: (seq_len*batch_size,vocab_size)
         output = self.linear(output.view(seq_len * batch_size, -1))
         return output, hidden
+
+
+max_gen_len = 200
+# 给定首句生成诗歌
+def generate(model, start_words, ix2word, word2ix):
+    results = list(start_words)
+    start_words_len = len(start_words)
+    # 第一个词语是<START>
+    input = torch.Tensor([word2ix['<START>']]).view(1, 1).long()
+    if torch.cuda.is_available():
+        input = input.cuda()
+    hidden = None
+    model.eval()
+
+    for i in range(max_gen_len):
+        output, hidden = model(input, hidden)
+
+        if i < start_words_len:
+            w = results[i]
+            input = input.data.new([word2ix[w]]).view(1, 1)
+        else:
+            # print(output.data[0].topk(1))
+            top_index = output.data[0].topk(1)[1][0].item()
+            w = ix2word[top_index]
+            results.append(w)
+            input = input.data.new([top_index]).view(1, 1)
+        if w == '<EOP>':
+            del results[-1]
+            break
+    return results
 
 
 
@@ -78,6 +103,7 @@ def train(dataloader, ix2word, word2ix):
                       hidden_dim=256)
     if torch.cuda.is_available():
         model = model.cuda()
+    print(model)
     #4、 选择损失函数和优化方法
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     criterion = nn.CrossEntropyLoss()
@@ -88,15 +114,10 @@ def train(dataloader, ix2word, word2ix):
         for li,data_ in tqdm.tqdm(enumerate(dataloader)):
             #print(data_.shape)
             data_ = data_.long().transpose(1,0).contiguous()
-            # 注意这里，也转移到了计算设备上
             data_ = get_variable(data_)
             optimizer.zero_grad()
-            # n个句子，前n-1句作为输入，后n-1句作为输出，二者一一对应
             input_,target = data_[:-1,:],data_[1:,:]
             output,_ = model(input_)
-            #print("Here",output.shape)
-            # 这里为什么view(-1)
-            #print(target.shape,target.view(-1).shape)
             loss = criterion(output,target.view(-1))
             loss.backward()
             optimizer.step()
@@ -110,7 +131,7 @@ def train(dataloader, ix2word, word2ix):
                 print(gen_poetry)
         
         #6、保存训练模型 Save the Trained Model
-        torch.save(model.state_dict(),"Poetry.pkl")
+    torch.save(model.state_dict(),"Poetry.pkl")
 
 if __name__ == '__main__':
     dataloader, ix2word, word2ix  = prepareData()

@@ -53,6 +53,7 @@ class CNN(nn.Module):
         return out
  
 cnn = CNN()
+print(cnn)
 if torch.cuda.is_available():
     cnn = cnn.cuda()
 

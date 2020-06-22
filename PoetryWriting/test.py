@@ -13,11 +13,9 @@ def generate(model, start_words, ix2word, word2ix):
         input = input.cuda()
     hidden = None
     model.eval()
-    # 开始真正生成诗句，如果没有使用风格前缀，则hidden = None，input = <START>
-    # 否则，input就是风格前缀的最后一个词语，hidden也是生成出来的
+    
     for i in range(max_gen_len):
         output, hidden = model(input, hidden)
-        # print(output.shape)
         # 如果在给定的句首中，input为句首中的下一个字
         # 如果还在诗句内部，输入就是诗句的字，不取出结果，只为了得到
         # 最后的hidden
@@ -26,7 +24,6 @@ def generate(model, start_words, ix2word, word2ix):
             input = input.data.new([word2ix[w]]).view(1, 1)
         # 否则将output作为下一个input进行
         else:
-            # print(output.data[0].topk(1))
             top_index = output.data[0].topk(1)[1][0].item()
             w = ix2word[top_index]
             results.append(w)
