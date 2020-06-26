@@ -64,7 +64,7 @@ def generate(model, start_words, ix2word, word2ix):
     if torch.cuda.is_available():
         input = input.cuda()
     hidden = None
-    model.eval()
+    #model.eval()
 
     for i in range(max_gen_len):
         output, hidden = model(input, hidden)
