@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import gensim
-#import gensim.models.word2vec as w2v
 from sklearn.model_selection import train_test_split
+import sklearn.metrics
 import time
 
 
@@ -37,11 +37,6 @@ def get_data(path):
 def getw2v():
     model_file_name = './data/wiki_word2vec_50.bin'
     # 模型训练，生成词向量
-    '''
-    sentences = w2v.LineSentence('trainword.txt')
-    model = w2v.Word2Vec(sentences, size=20, window=5, min_count=5, workers=4)
-    model.save(model_file_name)
-    '''
     # model = w2v.Word2Vec.load(model_file_name)
     model = gensim.models.KeyedVectors.load_word2vec_format(model_file_name, binary=True)
     return model;
@@ -203,8 +198,8 @@ for epoch in range(EPOCH):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step() 
-        
         pred_y = torch.max(output, 1)[1].data.squeeze()
+        # print(sklearn.metrics.accuracy_score(b_y.numpy().tolist(),pred_y.numpy().tolist()))
         acc = (b_y == pred_y)
         accuracy = acc.numpy().sum() / b_y.size(0)
         if(i+1)%10 == 0:
@@ -213,11 +208,15 @@ for epoch in range(EPOCH):
     # 测试
     test_all = 0
     test_right = 0
+    pred = []
+    target = []
     for j in range(0, (int)(len(test_x) / test_batch_size)):
         b_x = Variable(torch.LongTensor(test_x[j * test_batch_size:j * test_batch_size + test_batch_size]))
         b_y = Variable(torch.LongTensor((test_y[j * test_batch_size:j * test_batch_size + test_batch_size])))
         test_output = cnn(b_x)
         pred_y = torch.max(test_output, 1)[1].data.squeeze()
+        pred += pred_y.numpy().tolist()
+        target += b_y.numpy().tolist()
         acc = (pred_y == b_y)
         acc = acc.numpy().sum()
         now_acc = acc / b_y.size(0)
@@ -225,3 +224,9 @@ for epoch in range(EPOCH):
         test_all = test_all + b_y.size(0)
         total_acc = test_right / test_all
         print('TEST:in batch[%d/%d] accuracy is: %s, total accuracy is: %s\n'%(j+1,len(test_x)/test_batch_size,str(now_acc),str(total_acc)))
+        print("sklearn: now accuracy_score is %s,  precision_score is %s, recall_score is %s, f1-score is %s"
+        %(sklearn.metrics.accuracy_score(target,pred),sklearn.metrics.precision_score(target,pred,average='binary'),
+          sklearn.metrics.recall_score(target,pred,average='binary'),sklearn.metrics.f1_score(target,pred,average='binary')  ))
+        print("sklearn:confusion_matrix is ")
+        print(sklearn.metrics.confusion_matrix(target,pred))
+      
